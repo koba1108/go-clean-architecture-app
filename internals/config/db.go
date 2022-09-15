@@ -1,16 +1,16 @@
 package config
 
 import (
-	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"os"
 )
 
 const driverNameMYSQL = "mysql"
 
-func NewMySQL() (*sql.DB, error) {
-	return sql.Open(driverNameMYSQL, datasourceNameFromEnv())
+func NewGorm() (*gorm.DB, error) {
+	return gorm.Open(driverNameMYSQL, datasourceNameFromEnv())
 }
 
 func datasourceNameFromEnv() string {

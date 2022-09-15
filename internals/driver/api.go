@@ -11,10 +11,11 @@ import (
 )
 
 func Serve(addr string) {
-	db, err := config.NewMySQL()
+	db, err := config.NewGorm()
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
+
 	user := controller.User{
 		OutputFactory: presenter.NewUserOutputPort,
 		InputFactory:  interactor.NewUserInputPort,
@@ -22,12 +23,22 @@ func Serve(addr string) {
 		DB:            db,
 	}
 
-	server := gin.New()
-	userGroup := server.Group("/user")
-	{
-		userGroup.GET("/:id", user.GetUserByID)
+	r := gin.New()
+	if err = r.SetTrustedProxies(nil); err != nil {
+		log.Fatalf("failed to set trusted proxies: %v", err)
 	}
-	if err = server.Run(addr); err != nil {
+	apiVi := r.Group("v1")
+	{
+		userGroup := apiVi.Group("/user")
+		{
+			userGroup.GET("", user.GetUserAll)
+			userGroup.GET("/:userId", user.GetUserByID)
+			userGroup.POST("", user.CreateUser)
+			userGroup.PUT("/:userId", user.UpdateUser)
+			userGroup.DELETE("/:userId", user.DeleteUser)
+		}
+	}
+	if err = r.Run(addr); err != nil {
 		log.Fatalf("Listen and serve failed. %+v", err)
 	}
 }
